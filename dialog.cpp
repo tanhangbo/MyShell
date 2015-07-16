@@ -42,6 +42,8 @@ Dialog::Dialog(QWidget *parent) :
     log_is_logging = false;
     cur_file = NULL;
 
+    error_closed = 0;
+
     find_serial();
 }
 
@@ -52,7 +54,7 @@ Dialog::~Dialog()
 
 void Dialog::append_receive_content(QString str)
 {
-
+    ui->receive_content->moveCursor(QTextCursor::End);
     ui->receive_content->insertPlainText(str);
     ui->receive_content->moveCursor(QTextCursor::End);
 
@@ -148,6 +150,10 @@ bool Dialog::eventFilter(QObject* obj, QEvent *event)
     return Dialog::eventFilter(obj, event);
 }
 
+
+
+
+
 void Dialog::on_open_clicked()
 {
 
@@ -156,12 +162,18 @@ void Dialog::on_open_clicked()
         closeSerialPort();
         ui->open ->setText("打开");
         ui->status->setText(" 已关闭");
-        append_receive_content("\n\nConnection closed.\n\n\n");
+        append_receive_content("\n\n[MyShell]Connection closed.\n\n\n");
         return;
     }
 
 
 
+    openSerialPort(get_serialport_setting());
+}
+
+
+struct serial_port_info Dialog::get_serialport_setting()
+{
 
     /* port_name */
     QString ui_port_name = ui->setting_port->currentText();
@@ -213,18 +225,18 @@ void Dialog::on_open_clicked()
     info.BaudRate = baud_rate;
     info.StopBits = stop_bit;
 
-    openSerialPort(info);
-}
+    return info;
 
+}
 
 void Dialog::openSerialPort(struct serial_port_info info)
 {
 
     qDebug() << "using " <<info.PortName<<info.BaudRate<<info.DataBits<<info.StopBits;
 
-    ui->receive_content->insertPlainText("\nConnecting to " + info.PortName + ".\n");
-    ui->receive_content->moveCursor(QTextCursor::End);
 
+
+    append_receive_content("\n[MyShell]Connecting to " + info.PortName + ".\n");
 
 
     serial->setPortName(info.PortName);
@@ -235,15 +247,12 @@ void Dialog::openSerialPort(struct serial_port_info info)
     serial->setFlowControl(info.FlowControl);
     if (serial->open(QIODevice::ReadWrite)) {
         ui->status->setText(info.PortName + " open ok");
+        error_closed = false;
         ui->open ->setText("关闭");
-        ui->receive_content->insertPlainText("Connected.\n");
-        ui->receive_content->moveCursor(QTextCursor::End);
-
-
+        append_receive_content("\n[MyShell]Connected.\n");
     } else {
         ui->status->setText(info.PortName + " open fail");
-        ui->receive_content->insertPlainText("Failed to open " + info.PortName + ".\n");
-        ui->receive_content->moveCursor(QTextCursor::End);
+        append_receive_content("\n[MyShell]Failed to open " + info.PortName + ".\n");
     }
 
 }
@@ -256,10 +265,18 @@ void Dialog::closeSerialPort()
 
 void Dialog::writeData(QByteArray data)
 {
+
+    if (error_closed) {
+        closeSerialPort();
+        openSerialPort(get_serialport_setting());
+    }
+
     if (!serial->isOpen()) {
         ui->status->setText("serial not opened");
         return;
     }
+
+
 
     data.append("\r\n");
     serial->write(data);
@@ -306,6 +323,11 @@ void Dialog::handleError(QSerialPort::SerialPortError err)
 {
 
     qDebug() << __FUNCTION__ << err;
+
+    if (QSerialPort::ReadError == err) {
+        append_receive_content("[MyShell]Serial port got unplugged.\n");
+        error_closed = true;
+    }
 
 }
 
@@ -390,7 +412,7 @@ void Dialog::on_startrecord_clicked()
     if (log_current_file_name.length() > 0) {
         log_current_file_name = "";
         ui->startrecord->setText("开始记录");
-        append_receive_content("\nlogging stopped\n\n");
+        append_receive_content("\n[MyShell]logging stopped\n\n");
         if (cur_file) {
             cur_file->close();
             delete cur_file;
@@ -424,7 +446,7 @@ void Dialog::on_startrecord_clicked()
     }
 
     ui->startrecord->setText("停止记录");
-    append_receive_content("\nlogging enabled, file at  " + log_current_file_name + "\n\n");
+    append_receive_content("\n[MyShell]logging enabled, file at  " + log_current_file_name + "\n\n");
 
 }
 

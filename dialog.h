@@ -59,6 +59,9 @@ private:
     bool eventFilter(QObject* obj, QEvent *event);
     void find_serial();
     void append_item_to_list(QString);
+    struct serial_port_info get_serialport_setting();
+
+
 
     QStandardItemModel *standardItemModel;
 
@@ -71,6 +74,8 @@ private:
     int log_is_logging;
 
     void append_receive_content(QString);
+
+    bool error_closed;
 
 };
 
