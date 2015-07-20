@@ -57,7 +57,6 @@ void Dialog::append_receive_content(QString str)
     ui->receive_content->moveCursor(QTextCursor::End);
     ui->receive_content->insertPlainText(str);
     ui->receive_content->moveCursor(QTextCursor::End);
-
 }
 
 void Dialog::append_item_to_list(QString str)
@@ -299,10 +298,7 @@ void Dialog::readData()
         stream << data ;
     }
 
-
-    //ui->receive_content->moveCursor(QTextCursor::End);
-    ui->receive_content->insertPlainText(data);
-    ui->receive_content->moveCursor(QTextCursor::End);
+    append_receive_content(data);
 }
 /*
 QSerialPort::NoError	0	No error occurred.

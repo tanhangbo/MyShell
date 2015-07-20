@@ -13,12 +13,19 @@ Features of it:
 
 4.user friendly interface
 
+5.enter-reconnect mechanism when serial port got disconnected
+
+
 Todo:
 1.Improve efficiency, add auto-clear mechanism
 
 2.clean up code
 
-3.add auto-reconnect mechanism when serial port got disconnected
+3.dynamicly detect serial port inserted and unpluged
+
+4.auto-reconnect mechanism when serial port got disconnected and connected again
+
+5.event trigger, show pop up in system tray(for monitor event happen)
 
 
 Screenshot:
