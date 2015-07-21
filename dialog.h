@@ -12,6 +12,10 @@
 #include <QDateTime>
 #include <QProcess>
 #include <QDesktopServices>
+#include <QTextDocumentFragment>
+#include <QTextBlock>
+#include <QMutex>
+#include <QTimer>
 
 struct serial_port_info {
     QString PortName;
@@ -50,6 +54,8 @@ private slots:
 
     void on_open_dir_clicked();
 
+    void timer_update();
+
 private:
     Ui::Dialog *ui;
     QSerialPort *serial;
@@ -60,8 +66,13 @@ private:
     void find_serial();
     void append_item_to_list(QString);
     struct serial_port_info get_serialport_setting();
+    QString receive_buffer;
+    QMutex buffer_mutex;
 
 
+    int get_display_lines();
+    void delete_first_lines();
+    static const int line_thres = 1000;
 
     QStandardItemModel *standardItemModel;
 
@@ -74,6 +85,10 @@ private:
     int log_is_logging;
 
     void append_receive_content(QString);
+    bool new_content_coming;
+
+    QTimer *timer;
+
 
     bool error_closed;
 

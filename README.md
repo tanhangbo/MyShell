@@ -15,17 +15,18 @@ Features of it:
 
 5.enter-reconnect mechanism when serial port got disconnected
 
+6.auto-clear mechanism
+
 
 Todo:
-1.Improve efficiency, add auto-clear mechanism
 
-2.clean up code
+1.clean up code
 
-3.dynamicly detect serial port inserted and unpluged
+2.dynamicly detect serial port inserted and unpluged
 
-4.auto-reconnect mechanism when serial port got disconnected and connected again
+3.auto-reconnect mechanism when serial port got disconnected and connected again
 
-5.event trigger, show pop up in system tray(for monitor event happen)
+4.event trigger, show pop up in system tray(for monitor event happen)
 
 
 Screenshot:

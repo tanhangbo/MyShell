@@ -42,9 +42,19 @@ Dialog::Dialog(QWidget *parent) :
     log_is_logging = false;
     cur_file = NULL;
 
+    receive_buffer = "";
+
     error_closed = 0;
 
     find_serial();
+
+
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(timer_update()));
+    timer->start(10);
+
+
+
 }
 
 Dialog::~Dialog()
@@ -52,11 +62,32 @@ Dialog::~Dialog()
     delete ui;
 }
 
+void Dialog::timer_update()
+{
+
+
+    if (get_display_lines() > line_thres)
+        delete_first_lines();
+
+    if (new_content_coming) {
+        new_content_coming = false;
+        ui->receive_content->setPlainText(receive_buffer);
+        ui->receive_content->moveCursor(QTextCursor::End);
+
+    } else {
+        ;
+    }
+}
+
 void Dialog::append_receive_content(QString str)
 {
-    ui->receive_content->moveCursor(QTextCursor::End);
-    ui->receive_content->insertPlainText(str);
-    ui->receive_content->moveCursor(QTextCursor::End);
+    buffer_mutex.lock();
+    receive_buffer +=  str;
+    buffer_mutex.unlock();
+
+    new_content_coming = true;
+
+
 }
 
 void Dialog::append_item_to_list(QString str)
@@ -67,6 +98,23 @@ void Dialog::append_item_to_list(QString str)
     standardItemModel->appendRow(item);
 
 }
+
+int Dialog::get_display_lines()
+{
+
+    return receive_buffer.count("\n") + 1;
+}
+
+
+void Dialog::delete_first_lines()
+{
+
+    buffer_mutex.lock();
+    receive_buffer.remove(0, 100);
+    buffer_mutex.unlock();
+
+}
+
 
 void Dialog::find_serial()
 {
@@ -203,6 +251,10 @@ struct serial_port_info Dialog::get_serialport_setting()
         baud_rate = QSerialPort::Baud38400;
     else if (ui_baud == "115200")
         baud_rate = QSerialPort::Baud115200;
+    else {
+        qDebug() << "fail baud\n";
+        baud_rate = QSerialPort::Baud38400;
+    }
 
 
     QString ui_stopbit = ui->setting_stopbit->currentText();
@@ -297,6 +349,7 @@ void Dialog::readData()
         QTextStream stream(cur_file);
         stream << data ;
     }
+
 
     append_receive_content(data);
 }
@@ -393,6 +446,12 @@ void Dialog::on_history_list_doubleClicked(const QModelIndex &index)
 
 void Dialog::on_clear_clicked()
 {
+
+    buffer_mutex.lock();
+    receive_buffer = "";
+    buffer_mutex.unlock();
+
+
     ui->receive_content->clear();
 }
 
