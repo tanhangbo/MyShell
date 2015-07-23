@@ -14,7 +14,7 @@ Dialog::Dialog(QWidget *parent) :
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
     ui->setupUi(this);
 
-    QString title = "MyShell 0.2 - tanhangbo build " + tr(__DATE__);
+    QString title = "MyShell 0.4 - tanhangbo build " + tr(__DATE__);
     this->setWindowTitle(title);
     this->setWindowFlags(this->windowFlags() | Qt::WindowMinMaxButtonsHint);
 
@@ -46,7 +46,10 @@ Dialog::Dialog(QWidget *parent) :
 
     error_closed = 0;
 
+    need_add_time = false;
     find_serial();
+
+
 
 
     timer = new QTimer(this);
@@ -81,9 +84,27 @@ void Dialog::timer_update()
 
 void Dialog::append_receive_content(QString str)
 {
+
+    QDateTime cur_time = QDateTime::currentDateTime();
+
+
     buffer_mutex.lock();
+
+    if (ui->time_check->isChecked()) {
+        if (need_add_time && (str.at(0) != '\n')) {
+         receive_buffer += cur_time.toString("[hh:mm:ss]");;
+         need_add_time = false;
+        }
+    }
     receive_buffer +=  str;
+
+    if (ui->time_check->isChecked()) {
+        if (str.endsWith('\n'))
+            need_add_time = true;
+    }
     buffer_mutex.unlock();
+
+
 
     new_content_coming = true;
 
@@ -289,14 +310,13 @@ void Dialog::openSerialPort(struct serial_port_info info)
 
     append_receive_content("\n[MyShell]Connecting to " + info.PortName + ".\n");
 
-
     serial->setPortName(info.PortName);
-    serial->setBaudRate(info.BaudRate);
-    serial->setDataBits(info.DataBits);
-    serial->setParity(info.Parity);
-    serial->setStopBits(info.StopBits);
-    serial->setFlowControl(info.FlowControl);
     if (serial->open(QIODevice::ReadWrite)) {
+        serial->setBaudRate(info.BaudRate);
+        serial->setDataBits(info.DataBits);
+        serial->setParity(info.Parity);
+        serial->setStopBits(info.StopBits);
+        serial->setFlowControl(info.FlowControl);
         ui->status->setText(info.PortName + " open ok");
         error_closed = false;
         ui->open ->setText("关闭");

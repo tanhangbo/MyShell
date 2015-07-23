@@ -89,7 +89,7 @@ private:
 
     QTimer *timer;
 
-
+    bool need_add_time;
     bool error_closed;
 
 };
