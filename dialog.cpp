@@ -92,10 +92,18 @@ void Dialog::append_receive_content(QString str)
 
     if (ui->time_check->isChecked()) {
         if (need_add_time && (str.at(0) != '\n')) {
-         receive_buffer += cur_time.toString("[hh:mm:ss]");;
+         str  = cur_time.toString("[hh:mm:ss]") + str;
          need_add_time = false;
         }
     }
+
+
+    if (cur_file) {
+        QTextStream stream(cur_file);
+        stream << str ;
+    }
+
+
     receive_buffer +=  str;
 
     if (ui->time_check->isChecked()) {
@@ -363,12 +371,6 @@ void Dialog::readData()
     for (i  = 0; i < raw_data.size(); i++)
         if (raw_data.at(i) != 0x0d)
             data.append(raw_data.at(i));
-
-
-    if (cur_file) {
-        QTextStream stream(cur_file);
-        stream << data ;
-    }
 
 
     append_receive_content(data);
